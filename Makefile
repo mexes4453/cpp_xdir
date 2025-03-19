@@ -28,7 +28,9 @@ MSG =
 REP = mexes
 
 NAME = libxdir.a
+OBJ_MERGE = libxmerge.o
 
+LD = ld
 AR = ar
 CC = g++
 GCC = gcc
@@ -36,18 +38,22 @@ STD = c++17
 DEBUG = 
 VALGRIND =
 VAL =
-USR_LIB_PRINTF = libftprintf.a
-USR_LIB_PATH_PRINTF= ./ft_printf
+USR_LIB_PATH_XSTRING = ./xlib/xstring
+USR_LIB_XSTRING=libxstring.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra -g -std=$(STD) 
-LIBFLAGS_STATIC = -lz -rcs #-L$(USR_LIB_PATH_PRINTF) -lftprintf
+LIBFLAGS_STATIC = -lz -rcs \
+                 #-L$(USR_LIB_PATH_PRINTF) -lftprintf
+
 #CFLAGS += -D__thread__
 
 DEPSFLAG =: -MM $($@:.o=.d)
 
 # INCLUDE
-INCLUDES = -I./ -I./inc #-I$(USR_LIB_PATH_PRINTF) 
+INCLUDES = -I./ -I./inc \
+           -I$(USR_LIB_PATH_XSTRING)/inc \
+           #-I$(USR_LIB_PATH_PRINTF) 
 
 #=== DEBUG ====
 ifeq ($(DEBUG), 1)
@@ -61,9 +67,12 @@ endif
 
 NAME : all
 all : $(NAME) 
-$(NAME) : $(OBJS) 
+$(NAME) : $(OBJS) $(USR_LIB_XSTRING)
 	@echo "\033[1;33mCompiling Executables: $(NAME) \033[0m"
 	$(AR) $(LIBFLAGS_STATIC) $@ $^
+	$(LD) -r -o $(OBJ_MERGE) $(NAME) $(USR_LIB_XSTRING)
+	$(AR) $(LIBFLAGS_STATIC) $(NAME) $(OBJ_MERGE)
+	@rm $(OBJ_MERGE) 
 	@echo; echo "\033[1;32mCompilation Successful. \033[0m"
 	@echo; echo
 
@@ -93,6 +102,13 @@ $(DIR_OBJ)/%.o : $(DIR_SRC)/%.c
 	@echo
 
 
+# ==================
+# External libraries
+# ==================
+$(USR_LIB_XSTRING) :
+	@echo
+	@echo "\033[1;35mCompiling Library - libxpng \033[0m"
+	cd $(USR_LIB_PATH_XSTRING); make > /dev/null; cp $(USR_LIB_XSTRING) ../../; cd ../../
 
 
 # remove all object files
@@ -101,29 +117,11 @@ fclean:
 
 # remove final target files
 clean: fclean
-	rm -rf $(NAME)
+	rm -rf $(NAME) \
+	$(USR_LIB_PATH_XSTRING)/$(USR_LIB_XSTRING) $(USR_LIB_XSTRING) \
 
 # recompile everything
 re: clean all
-
-#=================== GIT ===============================
-#define comments
-push:	clean
-	$(info Pushing to Git Repository)
-ifeq ($(REP), 42)
-	@git push wolfsburg main
-	@echo $(COL_G)Pushed to repo: $(REP)$(COL_D)
-#	@git rm -f --cached *.pdf *.md			#	2> /dev/null
-else 
-	@git add ../*
-	@git ls-files; git status
-	@git commit -m "$(MSG)"
-	@git push mexes main
-	@echo $(COL_G)Pushed to repo: mexes$(COL_D)
-	@echo $(COL_G)$(MSG)$(COL_D)
-endif
-
-#endef # comments
 
 
 # ========== TEST ====================
