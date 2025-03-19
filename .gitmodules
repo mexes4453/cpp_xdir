@@ -1,0 +1,6 @@
+[submodule "cpp_xstring"]
+	path = cpp_xstring
+	url = git@github.com:mexes4453/cpp_xstring.git
+[submodule "xlib"]
+	path = xlib
+	url = git@github.com:mexes4453/cpp_xstring.git

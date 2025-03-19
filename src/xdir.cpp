@@ -6,18 +6,30 @@ void XDIR__ListDir(std::string &path, std::vector<std::string> &vStr)
 {
     fs::path dirPath = path;
     std::ostringstream oss;
+    std::string        strEntries;
+
     if (fs::exists(dirPath))
     {
         std::cout << "Director exist" << std::endl;
         for (fs::directory_entry const &dirent : fs::directory_iterator{dirPath})
         {   
-            std::cout << dirent << std::endl;
             oss.clear();
             oss << dirent;
-            vStr.push_back(oss.str());
+        }
+        strEntries = oss.str();
+        XSTRING__Split(vStr, strEntries, '"');
+    }
+
+    if (vStr.size())
+    {
+        for (std::size_t idx; idx < vStr.size(); idx++)
+        {
+            XSTRING__StripWhiteSpace(vStr.at(idx));
         }
     }
 }
+
+
 
 
 void XDIR__CopyFile(std::string const pathDst, std::string const pathSrc)
@@ -25,6 +37,7 @@ void XDIR__CopyFile(std::string const pathDst, std::string const pathSrc)
     fs::copy_options cpyOpt = fs::copy_options::overwrite_existing;
     fs::copy_file(pathSrc, pathDst, cpyOpt);
 }
+
 
 
 
@@ -64,7 +77,6 @@ std::string XDIR__BaseName(std::string &pathFile)
     }
     return (baseName);
 }
-
 
 
 
