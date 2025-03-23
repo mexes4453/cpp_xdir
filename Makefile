@@ -4,6 +4,10 @@ COL_Y = "\033[1;32m"
 COL_G = "\033[1;33m"
 COL_D = "\033[0m"
 
+#=============================
+# VARIABLES - GENERIC
+#=============================
+VAR_TRASH = /dev/null
 DIR_PROJECT = $(shell pwd)
 DIR_SRC = $(DIR_PROJECT)/src
 DIR_OBJ = $(DIR_PROJECT)/obj
@@ -43,11 +47,7 @@ USR_LIB_XSTRING=libxstring.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra -g -std=$(STD) 
-LIBFLAGS_STATIC = -lz -rcs \
-                 #-L$(USR_LIB_PATH_PRINTF) -lftprintf
-
-#CFLAGS += -D__thread__
-
+LIBFLAGS_STATIC = -lz -rcs 
 DEPSFLAG =: -MM $($@:.o=.d)
 
 # INCLUDE
@@ -64,6 +64,22 @@ ifeq ($(VALGRIND), 1)
 	VAL = valgrind
 endif
 	
+# ==================
+# FUNCTION MACROS
+# ==================
+define LIB_CLEAN
+	@echo $(COL_B) == Removing library: $(2) $(COL_D)
+	@rm $(2)
+	@cd $(1); make clean > $(VAR_TRASH); cd $(DIR_PROJECT)
+endef
+define LIB_MAKE
+	@echo
+	@echo $(COL_P)Compiling Library - $(2) $(COL_D)
+	@cd $(1); make > $(VAR_TRASH); cp $(2) $(DIR_PROJECT);
+	@cd $(DIR_PROJECT)
+	@echo
+endef
+
 
 NAME : all
 all : $(NAME) 
@@ -106,19 +122,17 @@ $(DIR_OBJ)/%.o : $(DIR_SRC)/%.c
 # External libraries
 # ==================
 $(USR_LIB_XSTRING) :
-	@echo
-	@echo "\033[1;35mCompiling Library - libxpng \033[0m"
-	cd $(USR_LIB_PATH_XSTRING); make > /dev/null; cp $(USR_LIB_XSTRING) ../../; cd ../../
+	$(call LIB_MAKE, $(USR_LIB_PATH_XSTRING),$(USR_LIB_XSTRING))
 
 
 # remove all object files
 fclean:
 	rm -rf $(DIR_OBJ) $(DIR_DEP) *.map
+	$(call LIB_CLEAN, $(USR_LIB_PATH_XSTRING),$(USR_LIB_XSTRING))
 
 # remove final target files
 clean: fclean
-	rm -rf $(NAME) \
-	$(USR_LIB_PATH_XSTRING)/$(USR_LIB_XSTRING) $(USR_LIB_XSTRING) \
+	rm -rf $(NAME) 
 
 # recompile everything
 re: clean all
